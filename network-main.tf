@@ -18,11 +18,19 @@ resource "azurerm_virtual_network" "network-vnet" {
     environment = var.environment
   }
 }
-# Create a subnet for Network
-resource "azurerm_subnet" "network-subnet" {
+# Create a private subnet for Network
+resource "azurerm_subnet" "network-priv-subnet" {
   name                 = "${var.app_name}-${var.environment}-subnet"
   //address_prefix       = var.network-subnet-cidr
-  address_prefixes = [var.network-subnet-cidr]
+  address_prefixes = [var.network-priv-subnet-cidr]
+  virtual_network_name = azurerm_virtual_network.network-vnet.name
+  resource_group_name  = azurerm_resource_group.network-rg.name
+}
+# Create a public subnet for Network
+resource "azurerm_subnet" "network-pub-subnet" {
+  name                 = "${var.app_name}-${var.environment}-subnet"
+  //address_prefix       = var.network-subnet-cidr
+  address_prefixes = [var.network-pub-subnet-cidr]
   virtual_network_name = azurerm_virtual_network.network-vnet.name
   resource_group_name  = azurerm_resource_group.network-rg.name
 }
