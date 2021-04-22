@@ -18,8 +18,8 @@ resource "random_string" "random-linux-vm" {
 }
 # Create Security Group to access web
 resource "azurerm_network_security_group" "web-linux-vm-nsg" {
-  depends_on = [
-    azurerm_resource_group.network-rg]
+//  depends_on = [
+//    azurerm_resource_group.network-rg]
   name = "${var.app_name}-${var.environment}-web-linux-vm-nsg"
   location = azurerm_resource_group.network-rg.location
   resource_group_name = azurerm_resource_group.network-rg.name
@@ -54,15 +54,15 @@ resource "azurerm_network_security_group" "web-linux-vm-nsg" {
 }
 # Associate the web NSG with the subnet
 resource "azurerm_subnet_network_security_group_association" "web-linux-vm-nsg-association" {
-  depends_on = [
-    azurerm_network_security_group.web-linux-vm-nsg]
+//  depends_on = [
+//    azurerm_network_security_group.web-linux-vm-nsg]
   subnet_id = azurerm_subnet.network-pub-subnet.id
   network_security_group_id = azurerm_network_security_group.web-linux-vm-nsg.id
 }
 # Get a Static Public IP
 resource "azurerm_public_ip" "web-linux-vm-ip" {
-  depends_on = [
-    azurerm_resource_group.network-rg]
+//  depends_on = [
+//    azurerm_resource_group.network-rg]
   name = "linux-${random_string.random-linux-vm.result}-vm-ip"
   location = azurerm_resource_group.network-rg.location
   resource_group_name = azurerm_resource_group.network-rg.name
@@ -75,8 +75,8 @@ resource "azurerm_public_ip" "web-linux-vm-ip" {
 }
 # Create Network Card for web VM
 resource "azurerm_network_interface" "web-linux-vm-nic" {
-  depends_on = [
-    azurerm_public_ip.web-linux-vm-ip]
+//  depends_on = [
+//    azurerm_public_ip.web-linux-vm-ip]
   name = "linux-${random_string.random-linux-vm.result}-vm-nic"
   location = azurerm_resource_group.network-rg.location
   resource_group_name = azurerm_resource_group.network-rg.name
@@ -98,8 +98,8 @@ data "template_file" "linux-vm-cloud-init" {
 }
 # Create Linux VM with web server
 resource "azurerm_linux_virtual_machine" "web-linux-vm" {
-  depends_on = [
-    azurerm_network_interface.web-linux-vm-nic]
+//  depends_on = [
+//    azurerm_network_interface.web-linux-vm-nic]
   name = "linux-${random_string.random-linux-vm.result}-vm"
   location = azurerm_resource_group.network-rg.location
   resource_group_name = azurerm_resource_group.network-rg.name
@@ -118,8 +118,10 @@ resource "azurerm_linux_virtual_machine" "web-linux-vm" {
     storage_account_type = "Standard_LRS"
   }
   computer_name = "linux-${random_string.random-linux-vm.result}-vm"
-  admin_username = var.web-linux-admin-username
-  admin_password = random_password.web-linux-vm-password.result
+  //admin_username = var.web-linux-admin-username
+  admin_username = "ubuntu"
+  //admin_password = random_password.web-linux-vm-password.result
+  admin_password = "Ubuntu@1234"
   custom_data = base64encode(data.template_file.linux-vm-cloud-init.rendered)
   disable_password_authentication = false
   tags = {
