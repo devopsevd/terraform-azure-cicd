@@ -2,6 +2,7 @@
 variable "web-linux-vm-size" {
   type        = string
   description = "Size (SKU) of the virtual machine to create"
+  default = "Standard_A1_v2"
 }
 variable "web-linux-license-type" {
   type        = string
@@ -33,7 +34,7 @@ variable "web-linux-vm-image" {
 variable "web-linux-admin-username" {
   type        = string
   description = "Username for Virtual Machine administrator account"
-  default     = ""
+  default     = "admin"
 }
 variable "web-linux-admin-password" {
   type        = string
