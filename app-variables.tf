@@ -1,8 +1,4 @@
-//# company name
-//variable "company" {
-//  type        = string
-//  description = "The company name used to build resources"
-//}
+
 # application name
 variable "app_name" {
   type        = string

@@ -16,7 +16,7 @@ sudo apt-get -y install docker-ce docker-ce-cli containerd.io
 # Installing docker-compose https://docs.docker.com/compose/install/
 sudo curl -L "https://github.com/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
-# Setting up Jenkins using docker-compose - ref:
-git clone https://github.com/devopsevd/terraform_jenkins.git
-cd terraform_jenkins
+# Setting up Nexus using docker-compose - ref:
+git clone https://github.com/devopsevd/terraform_sonar.git
+cd terraform_sonar
 docker-compose up -d

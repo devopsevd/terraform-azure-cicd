@@ -34,3 +34,21 @@ resource "azurerm_subnet" "network-pub-subnet" {
   virtual_network_name = azurerm_virtual_network.network-vnet.name
   resource_group_name  = azurerm_resource_group.network-rg.name
 }
+# Create a public subnet for Bastion
+resource "azurerm_subnet" "network-pub-bastion-subnet" {
+  name                 = "${var.app_name}-${var.environment}-pub-bastion-subnet"
+  //address_prefix       = var.network-subnet-cidr
+  address_prefixes = [var.network-pub-bastion-subnet-cidr]
+  virtual_network_name = azurerm_virtual_network.network-vnet.name
+  resource_group_name  = azurerm_resource_group.network-rg.name
+}
+
+# Create a public subnet for PROD
+resource "azurerm_subnet" "network-pub-prod-subnet" {
+  name                 = "${var.app_name}-${var.environment}-pub-prod-subnet"
+  //address_prefix       = var.network-subnet-cidr
+  address_prefixes = [var.network-pub-prod-subnet-cidr]
+  virtual_network_name = azurerm_virtual_network.network-vnet.name
+  resource_group_name  = azurerm_resource_group.network-rg.name
+}
+

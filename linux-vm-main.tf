@@ -1,5 +1,5 @@
 # Generate random password
-resource "random_password" "web-linux-vm-password" {
+resource "random_password" "linux-vm-password" {
   length = 16
   min_upper = 2
   min_lower = 2
@@ -16,116 +16,178 @@ resource "random_string" "random-linux-vm" {
   upper = false
   number = true
 }
-# Create Security Group to access web
-resource "azurerm_network_security_group" "web-linux-vm-nsg" {
-//  depends_on = [
-//    azurerm_resource_group.network-rg]
-  name = "${var.app_name}-${var.environment}-web-linux-vm-nsg"
+
+# Create Security Group to public subnet
+resource "azurerm_network_security_group" "linux-vm-public-nsg" {
+  //  depends_on = [
+  //    azurerm_resource_group.network-rg]
+  name = "${var.app_name}-${var.environment}-linux-vm-public-nsg"
   location = azurerm_resource_group.network-rg.location
   resource_group_name = azurerm_resource_group.network-rg.name
-  security_rule {
-    name = "allow-ssh"
-    description = "allow-ssh"
-    priority = 100
-    direction = "Inbound"
-    access = "Allow"
-    protocol = "Tcp"
-    source_port_range = "*"
-    destination_port_range = "22"
-    source_address_prefix = "Internet"
-    destination_address_prefix = "*"
-  }
-  security_rule {
-    name = "allow-http"
-    description = "allow-http"
-    priority = 110
-    direction = "Inbound"
-    access = "Allow"
-    protocol = "Tcp"
-    source_port_range = "*"
-    destination_port_range = "80"
-    source_address_prefix = "Internet"
-    destination_address_prefix = "*"
-  }
   tags = {
     application = var.app_name
     environment = var.environment
   }
 }
-# Associate the web NSG with the subnet
-resource "azurerm_subnet_network_security_group_association" "web-linux-vm-nsg-association" {
-//  depends_on = [
-//    azurerm_network_security_group.web-linux-vm-nsg]
+
+# Create Security Group to public bastion subnet
+resource "azurerm_network_security_group" "linux-vm-public-bastion-nsg" {
+  //  depends_on = [
+  //    azurerm_resource_group.network-rg]
+  name = "${var.app_name}-${var.environment}-linux-vm-public-bastion-nsg"
+  location = azurerm_resource_group.network-rg.location
+  resource_group_name = azurerm_resource_group.network-rg.name
+  tags = {
+    application = var.app_name
+    environment = var.environment
+  }
+}
+
+# Create Security Group to public bastion subnet
+resource "azurerm_network_security_group" "linux-vm-public-prod-nsg" {
+  //  depends_on = [
+  //    azurerm_resource_group.network-rg]
+  name = "${var.app_name}-${var.environment}-linux-vm-public-prod-nsg"
+  location = azurerm_resource_group.network-rg.location
+  resource_group_name = azurerm_resource_group.network-rg.name
+  tags = {
+    application = var.app_name
+    environment = var.environment
+  }
+}
+
+# Create Security Group to private subnet
+resource "azurerm_network_security_group" "linux-vm-private-nsg" {
+  //  depends_on = [
+  //    azurerm_resource_group.network-rg]
+  name = "${var.app_name}-${var.environment}-linux-vm-private-nsg"
+  location = azurerm_resource_group.network-rg.location
+  resource_group_name = azurerm_resource_group.network-rg.name
+  tags = {
+    application = var.app_name
+    environment = var.environment
+  }
+}
+
+# Associate the public NSG with the public subnet
+resource "azurerm_subnet_network_security_group_association" "linux-vm-public-nsg-association" {
+  //  depends_on = [
+  //    azurerm_network_security_group.web-linux-vm-nsg]
   subnet_id = azurerm_subnet.network-pub-subnet.id
-  network_security_group_id = azurerm_network_security_group.web-linux-vm-nsg.id
+  network_security_group_id = azurerm_network_security_group.linux-vm-public-nsg.id
 }
-# Get a Static Public IP
-resource "azurerm_public_ip" "web-linux-vm-ip" {
-//  depends_on = [
-//    azurerm_resource_group.network-rg]
-  name = "linux-${random_string.random-linux-vm.result}-vm-ip"
-  location = azurerm_resource_group.network-rg.location
-  resource_group_name = azurerm_resource_group.network-rg.name
-  allocation_method = "Static"
 
-  tags = {
-    application = var.app_name
-    environment = var.environment
-  }
+# Associate the public bastion NSG with the public bastion subnet
+resource "azurerm_subnet_network_security_group_association" "linux-vm-public-bastion-nsg-association" {
+  //  depends_on = [
+  //    azurerm_network_security_group.web-linux-vm-nsg]
+  subnet_id = azurerm_subnet.network-pub-bastion-subnet.id
+  network_security_group_id = azurerm_network_security_group.linux-vm-public-bastion-nsg.id
 }
-# Create Network Card for web VM
-resource "azurerm_network_interface" "web-linux-vm-nic" {
-//  depends_on = [
-//    azurerm_public_ip.web-linux-vm-ip]
-  name = "linux-${random_string.random-linux-vm.result}-vm-nic"
-  location = azurerm_resource_group.network-rg.location
-  resource_group_name = azurerm_resource_group.network-rg.name
 
-  ip_configuration {
-    name = "internal"
-    subnet_id = azurerm_subnet.network-pub-subnet.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id = azurerm_public_ip.web-linux-vm-ip.id
-  }
-  tags = {
-    application = var.app_name
-    environment = var.environment
-  }
+# Associate the public PROD NSG with the public prod subnet
+resource "azurerm_subnet_network_security_group_association" "linux-vm-public-prod-nsg-association" {
+  //  depends_on = [
+  //    azurerm_network_security_group.web-linux-vm-nsg]
+  subnet_id = azurerm_subnet.network-pub-prod-subnet.id
+  network_security_group_id = azurerm_network_security_group.linux-vm-public-prod-nsg.id
 }
-# Data template Bash bootstrapping file
-data "template_file" "linux-vm-cloud-init" {
-  template = file("setup-jenkins-server.sh")
+
+# Associate the private NSG with the private subnet
+resource "azurerm_subnet_network_security_group_association" "linux-vm-private-nsg-association" {
+  //  depends_on = [
+  //    azurerm_network_security_group.web-linux-vm-nsg]
+  subnet_id = azurerm_subnet.network-priv-subnet.id
+  network_security_group_id = azurerm_network_security_group.linux-vm-private-nsg.id
 }
-# Create Linux VM with web server
-resource "azurerm_linux_virtual_machine" "web-linux-vm" {
-//  depends_on = [
-//    azurerm_network_interface.web-linux-vm-nic]
-  name = "linux-${random_string.random-linux-vm.result}-vm"
-  location = azurerm_resource_group.network-rg.location
+
+# Network security rules for public subnet
+resource "azurerm_network_security_rule" "public-ssh" {
+  access = "Allow"
+  direction = "Inbound"
+  name = "allow-ssh"
+  priority = 100
+  protocol = "Tcp"
+  source_port_range = "*"
+  destination_port_range = "22"
+  source_address_prefix = "Internet"
+  destination_address_prefix = "*"
   resource_group_name = azurerm_resource_group.network-rg.name
-  network_interface_ids = [
-    azurerm_network_interface.web-linux-vm-nic.id]
-  size = var.web-linux-vm-size
-  source_image_reference {
-    offer = lookup(var.web-linux-vm-image, "offer", null)
-    publisher = lookup(var.web-linux-vm-image, "publisher", null)
-    sku = lookup(var.web-linux-vm-image, "sku", null)
-    version = lookup(var.web-linux-vm-image, "version", null)
-  }
-  os_disk {
-    name = "linux-${random_string.random-linux-vm.result}-vm-os-disk"
-    caching = "ReadWrite"
-    storage_account_type = "Standard_LRS"
-  }
-  computer_name = "linux-${random_string.random-linux-vm.result}-vm"
-  //admin_username = var.web-linux-admin-username
-  admin_username = "ubuntu"
-  //admin_password = random_password.web-linux-vm-password.result
-  admin_password = "Ubuntu@1234"
-  custom_data = base64encode(data.template_file.linux-vm-cloud-init.rendered)
-  disable_password_authentication = false
-  tags = {
-    application = var.app_name
-    environment = var.environment
-  }
+  network_security_group_name = azurerm_network_security_group.linux-vm-public-nsg.name
+}
+
+resource "azurerm_network_security_rule" "public-http" {
+  access = "Allow"
+  direction = "Inbound"
+  name = "allow-http"
+  priority = 110
+  protocol = "Tcp"
+  source_port_range = "*"
+  destination_port_range = "8080"
+  source_address_prefix = "Internet"
+  destination_address_prefix = "*"
+  resource_group_name = azurerm_resource_group.network-rg.name
+  network_security_group_name = azurerm_network_security_group.linux-vm-public-nsg.name
+}
+
+resource "azurerm_network_security_rule" "public-test-app" {
+  access = "Allow"
+  direction = "Inbound"
+  name = "allow-test-app"
+  priority = 120
+  protocol = "Tcp"
+  source_port_range = "*"
+  destination_port_range = "10000"
+  source_address_prefix = "Internet"
+  destination_address_prefix = "*"
+  resource_group_name = azurerm_resource_group.network-rg.name
+  network_security_group_name = azurerm_network_security_group.linux-vm-public-nsg.name
+}
+
+
+
+# Network security rules for public bastion subnet
+resource "azurerm_network_security_rule" "public-bastion-ssh" {
+  access = "Allow"
+  direction = "Inbound"
+  name = "allow-ssh"
+  priority = 100
+  protocol = "Tcp"
+  source_port_range = "*"
+  destination_port_range = "22"
+  source_address_prefix = "Internet"
+  destination_address_prefix = "*"
+  resource_group_name = azurerm_resource_group.network-rg.name
+  network_security_group_name = azurerm_network_security_group.linux-vm-public-bastion-nsg.name
+}
+
+# Network security rules for public prod subnet
+resource "azurerm_network_security_rule" "public-prod-app" {
+  access = "Allow"
+  direction = "Inbound"
+  name = "allow-application"
+  priority = 100
+  protocol = "Tcp"
+  source_port_range = "*"
+  destination_port_range = "10000"
+  source_address_prefix = "Internet"
+  destination_address_prefix = "*"
+  resource_group_name = azurerm_resource_group.network-rg.name
+  network_security_group_name = azurerm_network_security_group.linux-vm-public-prod-nsg.name
+}
+
+
+# Network security rules for private subnet
+resource "azurerm_network_security_rule" "private-ssh" {
+  access = "Allow"
+  direction = "Inbound"
+  name = "allow-ssh"
+  priority = 100
+  protocol = "Tcp"
+  source_port_range = "*"
+  destination_port_range = "22"
+  source_address_prefix = "VirtualNetwork"
+  destination_address_prefix = "*"
+  resource_group_name = azurerm_resource_group.network-rg.name
+  network_security_group_name = azurerm_network_security_group.linux-vm-private-nsg.name
 }
